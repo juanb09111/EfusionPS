@@ -1,7 +1,5 @@
-# Pynoptorch
-Pytorch + panoptic segmentation 
-
-This project implements the EfficientPS architecture for panoptic segmentation. We recommend using Hasty.ai to do your annotations. It will provide all the data needed to run Pynoptorch.
+# EffussionPS
+EfficientPS + FuseNet
 
 # Requirements
 

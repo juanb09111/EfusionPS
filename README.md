@@ -1,4 +1,4 @@
-# EffussionPS
+# EfussionPS
 EfficientPS + FuseNet
 
 # Requirements

@@ -13,7 +13,6 @@ from utils.lidar_cam_projection import read_calib_file, load_velo_scan, full_pro
 import glob
 import cv2
 import matplotlib.pyplot as plt
-from utils.fill_depth_colorization import fill_depth_colorization
 # %%
 
 

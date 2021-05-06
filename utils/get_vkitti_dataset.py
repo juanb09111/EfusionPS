@@ -1,18 +1,14 @@
 # %%
-import scipy.io
+
 import os.path
 import math
 import torch
-from pycocotools.coco import COCO
 import torchvision.transforms as transforms
 import torch.nn.functional as F
 from PIL import Image
 import numpy as np
 import config_kitti
-from utils.lidar_cam_projection import read_calib_file, load_velo_scan, full_project_velo_to_cam2, project_to_image
 import glob
-import cv2
-import matplotlib.pyplot as plt
 import random
 # %%
 
@@ -55,7 +51,7 @@ class vkittiDataset(torch.utils.data.Dataset):
             self.depth_imgs = depth_files
         else:
             self.source_imgs = images[:n_samples]
-            self.depth_imgs = depth_files[:n_samples]
+            self.depth_imgs = depth_files
 
         print("Training/evaluating on {} samples".format(len(self.source_imgs)))
 
@@ -75,13 +71,13 @@ class vkittiDataset(torch.utils.data.Dataset):
         rand_x_coors = []
         rand_y_coors = []
 
-        for i in range(0, config_kitti.N_NUMBER*2):
+        for i in range(0, config_kitti.N_NUMBER*3):
             rand_x_coors.append(random.randint(0, img_width -1))
 
-        for k in range(0, config_kitti.N_NUMBER*2):
+        for k in range(0, config_kitti.N_NUMBER*3):
             rand_y_coors.append(random.randint(0, img_height -1))
 
-        coors = torch.zeros((config_kitti.N_NUMBER*2, 2))
+        coors = torch.zeros((config_kitti.N_NUMBER*3, 2))
 
         # coors in the form of NxHxW
         coors[:, 1] = torch.tensor(rand_x_coors, dtype=torch.long)
@@ -139,7 +135,11 @@ class vkittiDataset(torch.utils.data.Dataset):
         if self.transforms is not None:
             source_img = self.transforms(crop=True)(source_img)
             depth_img = self.transforms(crop=True)(depth_img)
-
+        
+        sparse_depth_gt = np.array(depth_img, dtype=int).astype(np.float)/256
+        sparse_depth_gt = torch.from_numpy(sparse_depth_gt)
+        sparse_depth_gt = torch.where(sparse_depth_gt >= config_kitti.MAX_DEPTH, torch.tensor([0], dtype=torch.float64), sparse_depth_gt)
+        # print(torch.max(sparse_depth_gt), torch.min(sparse_depth_gt))
         # plt.imshow(source_img.permute(1,2,0))
         # plt.show()
 
@@ -153,7 +153,7 @@ class vkittiDataset(torch.utils.data.Dataset):
         virtual_lidar[:, 2] = depth
 
 
-        fig = plt.figure(4)
+        # fig = plt.figure(4)
         # ax = plt.axes(projection="3d")
         # ax = plt.axes(projection='3d')
 
@@ -178,8 +178,8 @@ class vkittiDataset(torch.utils.data.Dataset):
         sparse_depth[0, imPts[:, 0], imPts[:, 1]] = torch.tensor(
             depth, dtype=torch.float)
 
-        print(source_img.shape, virtual_lidar.shape, mask.shape, sparse_depth.shape, k_nn_indices.shape, depth_img.shape)
-        return source_img, virtual_lidar, mask, sparse_depth, k_nn_indices, depth_img, basname
+        # print(source_img, virtual_lidar, mask, sparse_depth, k_nn_indices, sparse_depth_gt)
+        return source_img, virtual_lidar, mask, sparse_depth, k_nn_indices, sparse_depth_gt, basname
 
     def __len__(self):
         return len(self.source_imgs)
@@ -280,19 +280,19 @@ def get_dataloaders(batch_size, imgs_root, depth_root, split=False, val_size=0.2
     return data_loader
 
 
-imgs_root = os.path.join(os.path.dirname(os.path.abspath(
-    __file__)), "../data_vkitti/virtual_world_vkitti-2/vkitti_2.0.3_rgb/")
+# imgs_root = os.path.join(os.path.dirname(os.path.abspath(
+#     __file__)), "../data_vkitti/virtual_world_vkitti-2/vkitti_2.0.3_rgb/")
 
-depth_root = os.path.join(os.path.dirname(os.path.abspath(
-    __file__)), "../data_vkitti/virtual_world_vkitti-2/vkitti_2.0.3_depth/")
+# depth_root = os.path.join(os.path.dirname(os.path.abspath(
+#     __file__)), "../data_vkitti/virtual_world_vkitti-2/vkitti_2.0.3_depth/")
 
-# vkitti_dataset = vkittiDataset(imgs_root, depth_root, get_transform)
+# # vkitti_dataset = vkittiDataset(imgs_root, depth_root, get_transform)
 
-# vkitti_dataset.__getitem__(1000)
+# # vkitti_dataset.__getitem__(1000)
 
-data_loader_train, data_loader_val = get_dataloaders(1, imgs_root, depth_root, split=True, val_size=0.20, n_samples=None)
+# data_loader_train, data_loader_val = get_dataloaders(1, imgs_root, depth_root, split=True, val_size=0.20, n_samples=None)
 
-print(len(data_loader_train), len(data_loader_val))
+# print(len(data_loader_train), len(data_loader_val))
 # data_depth_velodyne_root = os.path.join(os.path.dirname(os.path.abspath(
 #     __file__)), "../data_kitti/kitti_depth_completion_unmodified/data_depth_velodyne/train/")
 # data_depth_annotated_root = os.path.join(os.path.dirname(os.path.abspath(

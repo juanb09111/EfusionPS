@@ -13,11 +13,13 @@ K_NUMBER = 9
 # number of 3D points for the model
 # N_NUMBER = 8000
 N_NUMBER = 4000
+MAX_DEPTH = 30 # distance in meters
 # alpha parameter for loss calculation
 LOSS_ALPHA = 0.8
 
 
 DATA = "data_kitti/kitti_depth_completion_unmodified/"
+# DATA = "data_jd/data_jd/"
 
 MAX_EPOCHS = 100
 

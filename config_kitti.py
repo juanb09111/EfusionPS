@@ -1,12 +1,20 @@
 # All dirs relative to root
 BATCH_SIZE = 1
-MODEL = "FuseNet"
-MODEL_WEIGHTS_FILENAME_PREFIX = "FuseNet_weights"
+# MODEL = "FuseNet"
+MODEL = "EfficientPS"
+MODEL_WEIGHTS_FILENAME_PREFIX = "EfficientPS_weights"
+
+BACKBONE = "resnet50" # This is the only one available at the moment
+BACKBONE_OUT_CHANNELS = 256
+NUM_THING_CLASSES = 3 #excluding background
+NUM_STUFF_CLASSES = 12 #excluding background
+
 
 ORIGINAL_INPUT_SIZE_HW = (375, 1242)
 RESIZE = 0.5
 CROP_OUTPUT_SIZE = (200, 1000)
-
+MIN_SIZE = 800 # Taken from maskrcnn defaults  
+MAX_SIZE = 1333 # Taken from maskrcnn defaults 
 
 # for k-nn
 K_NUMBER = 9
@@ -31,19 +39,23 @@ DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/kitti_data_loader_train.pth"
 DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/kitti_data_loader_val.pth"
 
 
+COCO_ANN = "kitti2coco_ann_crop.json"
 # --------EVALUATION---------------
 
 # Set the model weights to be used for evaluation
 # MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.11186084686504852.pth"
-MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.30936820443942586.pth"
-
+# MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.30936820443942586.pth"
+# MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_3.8328559144969425.pth"
+MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.21798421939252358.pth"
 # Set the data loader to be used for evaluation. This can be set to None to use default filename
 DATA_LOADER = None
 
 
 # ----------INFERENCE ----------
 
-TEST_DIR = "data_val/"
+# TEST_DIR = "kitti_video/"
+TEST_DIR = "data_kitti/kitti_depth_completion_unmodified/"
+# TEST_DIR = "data_jd/data_jd/"
 
 # -------- REAL TIME ------
 
@@ -59,6 +71,6 @@ RT_VIDEO_OUTPUT_FOLDER = "rt_videos/kitti_depth_completion/"
 FPS = 5
 
 # folder containing the images
-VIDEO_CONTAINER_FOLDER = "EfficientPS2_resnet50_results_panoptic_novatron_set7/"
+VIDEO_CONTAINER_FOLDER = "images_video/"
 # video filename
-VIDEO_OUTOUT_FILENAME = "panoptic_novatron_set7.avi"
+VIDEO_OUTOUT_FILENAME = "video_name.avi"

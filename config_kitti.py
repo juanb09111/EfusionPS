@@ -34,7 +34,7 @@ MAX_EPOCHS = 100
 MAX_TRAINING_SAMPLES = None
 
 # If USE_PREEXISTING_DATA_LOADERS is True new data_loaders will not be written
-USE_PREEXISTING_DATA_LOADERS = False
+USE_PREEXISTING_DATA_LOADERS = True
 DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/kitti_data_loader_train.pth"
 DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/kitti_data_loader_val.pth"
 

@@ -28,7 +28,7 @@ def __results_to_json(model, data_loader_val, categories):
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
     res = []
-    for images, anns in data_loader_val:
+    for images, anns, _, _, _, _, _, _ in data_loader_val:
         images = list(img for img in images)
         images = tensorize_batch(images, device)
 
@@ -113,7 +113,7 @@ def mIOU(label, pred):
 def get_mIoU(model, data_loader_val):
 
     iou_list = []
-    for images, anns in data_loader_val:
+    for images, anns, _, _, _, _, _, _ in data_loader_val:
         images = list(img for img in images)
         images = tensorize_batch(images, device)
 
@@ -171,35 +171,35 @@ def evaluate(model=None, weights_file=None, data_loader_val=None):
 
     sys.stdout = open(train_res_file, 'a+')
     print("SemSeg mIoU = ", average_iou)
-    # Annotation file is by default located under
-    # constants.COCO_ANN_LOC/constants.ANN_VAL_DEFAULT_NAME
-    val_ann_filename = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), constants.COCO_ANN_LOC, constants.ANN_VAL_DEFAULT_NAME_OBJ)
+    # # Annotation file is by default located under
+    # # constants.COCO_ANN_LOC/constants.ANN_VAL_DEFAULT_NAME
+    # val_ann_filename = os.path.join(os.path.dirname(
+    #     os.path.abspath(__file__)), constants.COCO_ANN_LOC, constants.ANN_VAL_DEFAULT_NAME)
 
-    # Make coco api from annotation file
-    coco_gt = COCO(val_ann_filename)
+    # # Make coco api from annotation file
+    # coco_gt = COCO(val_ann_filename)
 
-    # Get categories
-    categories = list(coco_gt.cats)
+    # # Get categories
+    # categories = list(coco_gt.cats)
 
-    # res_filename will contain the predictions to be used later for evaluation
-    res_filename = constants.COCO_RES_JSON_FILENAME
-    # Export the predictions as a json file
-    __export_res(model, data_loader_val, res_filename, categories)
+    # # res_filename will contain the predictions to be used later for evaluation
+    # res_filename = constants.COCO_RES_JSON_FILENAME
+    # # Export the predictions as a json file
+    # __export_res(model, data_loader_val, res_filename, categories)
 
-    # Load res with coco.loadRes
-    coco_dt = coco_gt.loadRes(res_filename)
-    # Get the list of images
-    img_ids = sorted(coco_gt.getImgIds())
+    # # Load res with coco.loadRes
+    # coco_dt = coco_gt.loadRes(res_filename)
+    # # Get the list of images
+    # img_ids = sorted(coco_gt.getImgIds())
 
 
-    for iou_type in config.IOU_TYPES:
-        sys.stdout = open(train_res_file, 'a+')
-        coco_eval = cocoeval.COCOeval(coco_gt, coco_dt, iou_type)
-        coco_eval.params.img_ids = img_ids
-        coco_eval.evaluate()
-        coco_eval.accumulate()
-        coco_eval.summarize()
+    # for iou_type in config.IOU_TYPES:
+    #     sys.stdout = open(train_res_file, 'a+')
+    #     coco_eval = cocoeval.COCOeval(coco_gt, coco_dt, iou_type)
+    #     coco_eval.params.img_ids = img_ids
+    #     coco_eval.evaluate()
+    #     coco_eval.accumulate()
+    #     coco_eval.summarize()
 
 
 if __name__ == "__main__":

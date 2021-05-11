@@ -1,4 +1,5 @@
 import torch
+import torchvision
 import numpy as np
 import os.path
 import json
@@ -36,21 +37,18 @@ def threshold_instances(preds, threshold=0.5):
 
     return preds
 
-def filter_by_class(preds, exclude_ins_classes=[], excluded_sem_classes=[]):
-    
-    for i in range(len(preds)):
-        mask_logits, bbox_pred, class_pred, confidence, semantic_logits = preds[i][
-            "masks"], preds[i]["boxes"], preds[i]["labels"], preds[i]["scores"], preds[i]["semantic_logits"]
+def threshold_overlap(preds, nms_threshold=0.4):
 
-        # print(semantic_logits.shape)
+    for i in range(len(preds)):
+        mask_logits, bbox_pred, class_pred, confidence = preds[i][
+            "masks"], preds[i]["boxes"], preds[i]["labels"], preds[i]["scores"]
+
         if "ids" in preds[i].keys():
             ids = preds[i]["ids"]
-
-        # filter instances by class
-        included_ins_classes = torch.as_tensor([c not in exclude_ins_classes for c in class_pred])
-        indices = torch.tensor(torch.where((included_ins_classes == True))[0], device=temp_variables.DEVICE)
-
-
+        
+        
+        indices = torchvision.ops.nms(bbox_pred, confidence, nms_threshold)
+        
         mask_logits = torch.index_select(mask_logits, 0, indices)
         bbox_pred = torch.index_select(bbox_pred, 0, indices)
         class_pred = torch.index_select(class_pred, 0, indices)
@@ -65,15 +63,10 @@ def filter_by_class(preds, exclude_ins_classes=[], excluded_sem_classes=[]):
         if "ids" in  preds[i].keys():
             preds[i]["ids"] = ids
 
-        
-        # filter semantic logits by class
-
-        included_sem_classes = torch.as_tensor([c in excluded_sem_classes for c in range(semantic_logits.shape[0])])
-        indices = torch.where((included_sem_classes == True))
-        # print(indices)
-        # preds[i]["semantic_logits"][indices] = torch.zeros_like(preds[i]["semantic_logits"][0])
-        preds[i]["semantic_logits"][indices] = preds[i]["semantic_logits"][0] - 100
     return preds
+
+
+
 
 def sort_by_confidence(preds):
 

@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     with open(train_res_file, "w+") as training_results:
         training_results.write(
-            "----- TRAINING RESULTS - Kitti Depth Completion----"+"\n")
+            "----- TRAINING RESULTS - VKitti Panoptic----"+"\n")
     # Set device
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')

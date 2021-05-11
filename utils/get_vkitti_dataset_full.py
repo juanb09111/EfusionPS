@@ -248,7 +248,8 @@ class vkittiDataset(torch.utils.data.Dataset):
        
         if self.transforms is not None:
             semantic_mask = self.transforms(crop=True)(semantic_mask)*255
-            semantic_mask = torch.as_tensor(semantic_mask, dtype=torch.uint8)
+            semantic_mask = torch.as_tensor(semantic_mask, dtype=torch.uint8).squeeze_(0)
+            
             
         
         my_annotation["semantic_mask"] = semantic_mask
@@ -282,8 +283,8 @@ class vkittiDataset(torch.utils.data.Dataset):
         # plt.imshow(source_img.permute(1,2,0))
         # plt.show()
 
-        plt.imshow(depth_img.permute(1,2,0))
-        plt.show()
+        # plt.imshow(depth_img.permute(1,2,0))
+        # plt.show()
 
         imPts, depth = self.sample_depth_img(depth_img)
 

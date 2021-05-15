@@ -1,7 +1,8 @@
 # All dirs relative to root
 BATCH_SIZE = 1
 # MODEL = "FuseNet"
-MODEL = "EfficientPS"
+# MODEL = "EfficientPS"
+MODEL = "EfusionPS"
 MODEL_WEIGHTS_FILENAME_PREFIX = "EfficientPS_weights"
 
 BACKBONE = "resnet50" # This is the only one available at the moment
@@ -9,6 +10,7 @@ BACKBONE_OUT_CHANNELS = 256
 NUM_THING_CLASSES = 3 #excluding background
 NUM_STUFF_CLASSES = 12 #excluding background
 
+SEMANTIC_HEAD_DEPTHWISE_CONV = True
 
 ORIGINAL_INPUT_SIZE_HW = (375, 1242)
 RESIZE = 0.5
@@ -35,8 +37,8 @@ MAX_TRAINING_SAMPLES = None
 
 # If USE_PREEXISTING_DATA_LOADERS is True new data_loaders will not be written
 USE_PREEXISTING_DATA_LOADERS = True
-DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/kitti_data_loader_train.pth"
-DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/kitti_data_loader_val.pth"
+DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/kitti_data_loader_train_full.pth"
+DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/kitti_data_loader_val_full.pth"
 
 
 COCO_ANN = "kitti2coco_ann_crop.json"

@@ -1,10 +1,10 @@
 # All dirs relative to root
 BATCH_SIZE = 1
 # MODEL = "FuseNet"
-# MODEL = "EfficientPS"
+MODEL = "EfficientPS_no_instance"
 # MODEL = "EfusionPS"
-MODEL =  "EfusionPS_no_instance"
-MODEL_WEIGHTS_FILENAME_PREFIX = "EfficientPS_weights"
+# MODEL =  "EfusionPS_no_instance"
+MODEL_WEIGHTS_FILENAME_PREFIX = "EfficientPS_no_instance_weights"
 
 BACKBONE = "resnet50" # This is the only one available at the moment
 BACKBONE_OUT_CHANNELS = 256
@@ -13,7 +13,7 @@ NUM_STUFF_CLASSES = 12 #excluding background
 
 SEMANTIC_HEAD_DEPTHWISE_CONV = True
 
-ORIGINAL_INPUT_SIZE_HW = (375, 1242)
+ORIGINAL_INPUT_SIZE_HW = (200, 1000)
 RESIZE = 0.5
 CROP_OUTPUT_SIZE = (200, 1000)
 MIN_SIZE = 800 # Taken from maskrcnn defaults  

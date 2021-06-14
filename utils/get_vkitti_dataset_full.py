@@ -58,6 +58,7 @@ def get_vkitti_files(dirName, ext):
 class vkittiDataset(torch.utils.data.Dataset):
     def __init__(self, imgs_root, depth_root, annotation, transforms, n_samples=None):
 
+        print("here, init")
         self.imgs_root = imgs_root
         self.depth_root = depth_root
 
@@ -169,9 +170,10 @@ class vkittiDataset(torch.utils.data.Dataset):
         # open the input image
         # img = Image.open(path)
 
-        semantic_mask_path = coco.loadImgs(img_id)[0]['semseg_img_filename']
+        semantic_mask_path = coco.loadImgs(img_id)[0]['semseg_img_filename'].split("/")[-1]
         # create semantic mask
-        
+        semantic_mask_path = os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), "../data_vkitti/semseg_bin", semantic_mask_path)
         semantic_mask = Image.open(semantic_mask_path)
         
 
@@ -266,6 +268,12 @@ class vkittiDataset(torch.utils.data.Dataset):
         
         depth_filename = [s for s in self.depth_imgs if (scene in s and basename in s)][0]
         # print(img_filename, depth_filename)
+
+        img_filename = os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), "../data_vkitti", "/".join(img_filename.split("/")[-7:]))
+
+        depth_filename = os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), "../data_vkitti", "/".join(depth_filename.split("/")[-7:]))
 
         source_img = Image.open(img_filename)
         depth_img = Image.open(depth_filename)

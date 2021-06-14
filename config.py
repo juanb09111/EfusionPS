@@ -7,7 +7,7 @@ NUM_STUFF_CLASSES = 2 #excluding background
 
 
 BATCH_SIZE = 2
-MODEL = "EfficientPS"
+MODEL = "EfusionPS_no_instance"
 MODEL_WEIGHTS_FILENAME_PREFIX = "EfficientPS_weights"
 
 ## Available backbone networks are: 
@@ -107,10 +107,12 @@ CHECKPOINT = None
 
 # Set the model weights to be used for evaluation
 
-MODEL_WEIGHTS_FILENAME =  "tmp/models/EfficientPS_weights_resnet50_loss_0.8475958108901978.pth" # 370 samples
-
+# MODEL_WEIGHTS_FILENAME =  "tmp/models/EfficientPS_weights_resnet50_loss_0.8475958108901978.pth" # 370 samples
+MODEL_WEIGHTS_FILENAME = "tmp/models/EfusionPS_vkitti/EfficientPS_weights_loss_0.9404212706270914.pth"
+MODEL_WEIGHTS_FILENAME = "tmp/models/EfficientPS_weights_loss_3.6351229490756483.pth"
 # Set the data loader to be used for evaluation. This can be set to None to use default dataloader found under tmp/data_loaders/data_loader_val_obj.pth
-DATA_LOADER = None
+DATA_LOADER = "tmp/data_loaders/kitti_data_loader_val_full.pth"
+VAL_ANN_FILENAME = "tmp/coco_ann/coco_ann_val.json"
 IOU_TYPES = ["bbox", "segm"]
 
 # ----------INFERENCE ----------

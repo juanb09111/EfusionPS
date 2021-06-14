@@ -5,12 +5,16 @@ MODELS_LOC = "tmp/models/"
 RES_LOC = "tmp/res/"
 
 INFERENCE_RESULTS = "results/"
+EFUSION_RESULTS = "results/EfusionPS/"
 
 TRAIN_DIR = "data_train/"
 VAL_DIR = "data_val/"
 
 TRAIN_RES_FILENAME = "training_results.txt"
+EVAL_RES_FILENAME = "eval_results.txt"
 KITTI_TRAIN_RES_FILENAME = "kitti_training_results.txt"
+KITTI_TRAIN_RES_FILENAME_NO_INSTANCE = "vkitti_training_efusionps_no_instance_results.txt"
+VKITTI_TRAIN_RES_FILENAME_EffPS_NO_INSTANCE = "vkitti_training_effps_no_instance_results.txt"
 
 KITTI_DATA_LOADER_TRAIN_FILANME = "kitti_data_loader_train.pth"
 KITTI_DATA_LOADER_VAL_FILENAME = "kitti_data_loader_val.pth"

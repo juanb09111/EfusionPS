@@ -63,7 +63,11 @@ class vkittiDataset(torch.utils.data.Dataset):
         self.depth_root = depth_root
 
         self.coco = COCO(annotation)
+
+        # get ids and shuffle
         self.ids = list(sorted(self.coco.imgs.keys()))
+        random.shuffle(self.ids)
+
         catIds = self.coco.getCatIds()
         categories = self.coco.loadCats(catIds)
         self.categories = list(map(lambda x: x['name'], categories))
@@ -76,19 +80,15 @@ class vkittiDataset(torch.utils.data.Dataset):
         self.obj_categories = list(map(lambda x: x['name'], obj_categories))
 
 
-        images = get_vkitti_files(imgs_root, "jpg")
         depth_files = get_vkitti_files(depth_root, "png")
-
+        self.depth_imgs = depth_files
 
         self.transforms = transforms
-        if n_samples is None:
-            self.source_imgs = images
-            self.depth_imgs = depth_files
-        else:
-            self.source_imgs = images[:n_samples]
-            self.depth_imgs = depth_files
 
-        print("Training/evaluating on {} samples".format(len(self.source_imgs)))
+        if n_samples != None:
+            self.ids = self.ids[:n_samples]
+
+        print("Training/evaluating on {} samples".format(len(self.ids)))
 
     def find_k_nearest(self, lidar_fov):
         k_number = config_kitti.K_NUMBER
@@ -173,7 +173,7 @@ class vkittiDataset(torch.utils.data.Dataset):
         semantic_mask_path = coco.loadImgs(img_id)[0]['semseg_img_filename'].split("/")[-1]
         # create semantic mask
         semantic_mask_path = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "../data_vkitti/semseg_bin", semantic_mask_path)
+        os.path.abspath(__file__)), "../data_vkitti/virtual_world_vkitti-2/semseg_bin", semantic_mask_path)
         semantic_mask = Image.open(semantic_mask_path)
         
 
@@ -270,10 +270,10 @@ class vkittiDataset(torch.utils.data.Dataset):
         # print(img_filename, depth_filename)
 
         img_filename = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "../data_vkitti", "/".join(img_filename.split("/")[-7:]))
+        os.path.abspath(__file__)), "../data_vkitti/virtual_world_vkitti-2", "/".join(img_filename.split("/")[-7:]))
 
         depth_filename = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "../data_vkitti", "/".join(depth_filename.split("/")[-7:]))
+        os.path.abspath(__file__)), "../data_vkitti/virtual_world_vkitti-2", "/".join(depth_filename.split("/")[-7:]))
 
         source_img = Image.open(img_filename)
         depth_img = Image.open(depth_filename)
@@ -329,7 +329,7 @@ class vkittiDataset(torch.utils.data.Dataset):
         return source_img, ann, virtual_lidar, mask, sparse_depth, k_nn_indices, sparse_depth_gt, basename
 
     def __len__(self):
-        return len(self.source_imgs)
+        return len(self.ids)
 
 
 
@@ -339,6 +339,7 @@ def get_transform(resize=False, normalize=False, crop=False):
     new_size = tuple(int(x) for x in new_size)
     custom_transforms = []
     if resize:
+        print("resizing samples to", new_size)
         custom_transforms.append(transforms.Resize(new_size))
 
     if crop:
@@ -384,14 +385,14 @@ def get_dataloaders(batch_size, imgs_root, depth_root, annotation, split=False, 
 
         data_loader_train = torch.utils.data.DataLoader(train_set,
                                                         batch_size=batch_size,
-                                                        shuffle=False,
+                                                        shuffle=True,
                                                         num_workers=0,
                                                         collate_fn=collate_fn,
                                                         drop_last=True)
 
         data_loader_val = torch.utils.data.DataLoader(val_set,
                                                       batch_size=batch_size,
-                                                      shuffle=False,
+                                                      shuffle=True,
                                                       num_workers=0,
                                                       collate_fn=collate_fn,
                                                       drop_last=True)

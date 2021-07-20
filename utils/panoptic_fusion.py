@@ -109,10 +109,7 @@ def summary(labels, thing_categories):
     return count
 
 
-def get_stuff_thing_classes():
-
-    ann_file = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "..", config.HASTY_COCO_ANN)
+def get_stuff_thing_classes(ann_file):
 
     with open(ann_file) as hasty_file:
         # read file

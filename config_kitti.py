@@ -3,21 +3,22 @@ BATCH_SIZE = 1
 # MODEL = "FuseNet"
 # MODEL = "EfficientPS"
 # MODEL = "EfusionPS"
-MODEL =  "EfusionPS_no_instance"
-MODEL_WEIGHTS_FILENAME_PREFIX = "EfficientPS_weights"
+MODEL =  "EfusionPS_V3"
+MODEL_WEIGHTS_FILENAME_PREFIX = "EfusionPS_V3"
 
 BACKBONE = "resnet50" # This is the only one available at the moment
 BACKBONE_OUT_CHANNELS = 256
 NUM_THING_CLASSES = 3 #excluding background
 NUM_STUFF_CLASSES = 12 #excluding background
 
-SEMANTIC_HEAD_DEPTHWISE_CONV = True
+SEMANTIC_HEAD_DEPTHWISE_CONV = False
 
-ORIGINAL_INPUT_SIZE_HW = (375, 1242)
+# ORIGINAL_INPUT_SIZE_HW = (375, 1242)
+ORIGINAL_INPUT_SIZE_HW = (200, 1000)
 RESIZE = 0.5
 CROP_OUTPUT_SIZE = (200, 1000)
-MIN_SIZE = 800 # Taken from maskrcnn defaults  
-MAX_SIZE = 1333 # Taken from maskrcnn defaults 
+MIN_SIZE = 100 # Taken from maskrcnn defaults  
+MAX_SIZE = 1200 # Taken from maskrcnn defaults 
 
 # for k-nn
 K_NUMBER = 9
@@ -34,22 +35,32 @@ DATA = "data_kitti/kitti_depth_completion_unmodified/"
 
 MAX_EPOCHS = 100
 
-MAX_TRAINING_SAMPLES = None
+MAX_TRAINING_SAMPLES = 100
 
 # If USE_PREEXISTING_DATA_LOADERS is True new data_loaders will not be written
 USE_PREEXISTING_DATA_LOADERS = True
-DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/kitti_data_loader_train_full.pth"
-DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/kitti_data_loader_val_full.pth"
+DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/vkitti_data_loader_train_100_obj.pth"
+DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/vkitti_data_loader_val_100_obj.pth"
 
 
-COCO_ANN = "kitti2coco_ann_crop.json"
+COCO_ANN = "kitti2coco_ann_crop_obj.json"
+
+
+# ----------INFERENCE ----------
+
+TEST_DIR = "data_val/"
+
+INSTANCE =  False
+SEMANTIC =  False
+PANOPTIC =  True
+
 # --------EVALUATION---------------
 
 # Set the model weights to be used for evaluation
 # MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.11186084686504852.pth"
 # MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.30936820443942586.pth"
 # MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_3.8328559144969425.pth"
-MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.21798421939252358.pth"
+MODEL_WEIGHTS_FILENAME = "tmp/models/EfficientPS_loss_0.6298974752426147.pth"
 # Set the data loader to be used for evaluation. This can be set to None to use default filename
 DATA_LOADER = None
 

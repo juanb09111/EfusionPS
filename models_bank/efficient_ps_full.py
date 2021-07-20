@@ -6,25 +6,56 @@ from torch import nn
 import torch.nn.functional as F
 import torchvision
 
+from common_blocks.depth_wise_conv import depth_wise_conv
+from common_blocks.continuous_conv import ContinuousConvolution
+from common_blocks.depth_wise_sep_conv import depth_wise_sep_conv
+
+
+from backbones_bank.tunned_maskrcnn.utils.backbone_utils import resnet_fpn_backbone
+from backbones_bank.efficient_net_map import efficient_net_map as eff_net
 import config
 import temp_variables
 from backbones_bank.tunned_maskrcnn.mask_rcnn import MaskRCNN, maskrcnn_resnet50_fpn
 
 
-class EfficientPS2(nn.Module):
+def map_backbone(backbone_net_name, original_aspect_ratio=None):
+    if "EfficientNetB" in backbone_net_name:
+        if original_aspect_ratio is None:
+            raise AssertionError("original_aspect_ratio is required")
+        else:
+            return eff_net(backbone_net_name, original_aspect_ratio)
+    elif backbone_net_name == "resnet50":
+        return None
+    else:
+        return None
+
+
+class EfficientPS_Full(nn.Module):
     def __init__(self, backbone_net_name,
                  backbone_out_channels,
-                 num_ins_classes, num_sem_classes,
+                 k_number,
+                 num_ins_classes,
+                 num_sem_classes,
                  original_image_size,
-                 min_size=800, max_size=1333):
-        super(EfficientPS2, self).__init__()
+                 min_size=800,
+                 max_size=1333,
+                 n_number=None):
+        super(EfficientPS_Full, self).__init__()
 
+        # original_aspect_ratio = original_image_size[0]/original_image_size[1]
+        # print("original image size", original_image_size)
+        # # backbone = map_backbone(
+        # #     backbone_net_name, original_aspect_ratio=original_aspect_ratio)
+
+        backbone = resnet_fpn_backbone('resnet50', True)
         self.mask_rcnn = maskrcnn_resnet50_fpn(
-            pretrained=False, num_classes=num_ins_classes + 1, min_size=min_size, max_size=max_size)
+            pretrained=False, backbone=backbone, num_classes=num_ins_classes + 1, min_size=min_size, max_size=max_size)
 
         self.semantic_head = sem_seg_head(
             backbone_out_channels,
-            num_ins_classes + num_sem_classes + 1, original_image_size)
+            num_ins_classes + num_sem_classes + 1, original_image_size, depthwise_conv=config.SEMANTIC_HEAD_DEPTHWISE_CONV)
+
+
 
         for module in self.children():
             if self.training:
@@ -36,7 +67,17 @@ class EfficientPS2(nn.Module):
         for module in self.children():
             module.to(device)
 
-    def forward(self, images, anns=None, semantic=True, instance=True):
+    def forward(self,
+                images,
+                sparse_depth,
+                mask,
+                coors,
+                k_nn_indices,
+                anns=None,
+                semantic=True,
+                instance=True,
+                sparse_depth_gt=None):
+
 
         losses = {}
         semantic_logits = []
@@ -45,7 +86,6 @@ class EfficientPS2(nn.Module):
 
         if self.training:
             maskrcnn_losses, backbone_feat = self.mask_rcnn(images, anns)
-            # print("maskrcnn_losses", maskrcnn_losses)
 
         else:
             maskrcnn_results, backbone_feat = self.mask_rcnn(images)
@@ -54,20 +94,20 @@ class EfficientPS2(nn.Module):
 
         if semantic:
             semantic_logits = self.semantic_head(P4, P8, P16, P32)
-            # print("semantic_logits.shape", semantic_logits[0, 3, :, :])
+
+
 
         if self.training:
 
+            #----------------------
             if semantic:
                 semantic_masks = list(
                     map(lambda ann: ann['semantic_mask'], anns))
-                semantic_masks = tensorize_batch(semantic_masks, temp_variables.DEVICE)
-                target_shape = semantic_masks.long().shape 
-                sem_out = F.interpolate(semantic_logits, target_shape[1:])
+                semantic_masks = tensorize_batch(
+                    semantic_masks, temp_variables.DEVICE)
 
                 losses["semantic_loss"] = F.cross_entropy(
-                    sem_out, semantic_masks.long())
-
+                    semantic_logits, semantic_masks.long())
 
             losses = {**losses, **maskrcnn_losses}
 
@@ -92,7 +132,7 @@ class EfficientPS2(nn.Module):
 # coco_ann_train = os.path.join(os.path.dirname(
 #     os.path.abspath(__file__)), "..", train_ann_filename)
 # data_loader_train = get_datasets.get_dataloaders(
-#     config.BATCH_SIZE, train_dir, annotation=coco_ann_train, semantic_masks_folder=config.SEMANTIC_SEGMENTATION_DATA)
+#     config.BATCH_SIZE, train_dir, annotation=coco_ann_train, semantic_masks_folder=config.SEMANTIC_SEGMENTATION_DATA_LOC)
 
 
 # iterator = iter(data_loader_train)

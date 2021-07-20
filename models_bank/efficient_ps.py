@@ -5,6 +5,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import torchvision
+from backbones_bank.tunned_maskrcnn.utils.backbone_utils import resnet_fpn_backbone
 from backbones_bank.efficient_net_map import efficient_net_map as eff_net
 import config
 import temp_variables
@@ -31,11 +32,12 @@ class EfficientPS(nn.Module):
                  min_size=800, max_size=1333):
         super(EfficientPS, self).__init__()
 
-        original_aspect_ratio = original_image_size[0]/original_image_size[1]
+        # original_aspect_ratio = original_image_size[0]/original_image_size[1]
+        # print("original image size", original_image_size)
+        # # backbone = map_backbone(
+        # #     backbone_net_name, original_aspect_ratio=original_aspect_ratio)
 
-        backbone = map_backbone(
-            backbone_net_name, original_aspect_ratio=original_aspect_ratio)
-
+        backbone = resnet_fpn_backbone('resnet50', True)
         self.mask_rcnn = maskrcnn_resnet50_fpn(
             pretrained=False, backbone=backbone, num_classes=num_ins_classes + 1, min_size=min_size, max_size=max_size)
 

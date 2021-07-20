@@ -73,7 +73,8 @@ USE_TORCHVISION_AUGMENTATION = False
 USE_PREEXISTING_DATA_LOADERS = False
 # Otherwise, if USE_PREEXISTING_DATA_LOADERS is True please state the location of the dataloader to be used for training here:
 DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/data_loader_train.pth"
-DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/data_loader_val.pth"
+# DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/data_loader_val.pth"
+DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/vkitti_data_loader_val_100.pth"
 DATA_LOADER_VAL_FILENAME_OBJ = "tmp/data_loaders/data_loader_val_obj.pth"
 
 

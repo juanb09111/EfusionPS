@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import MultiStepLR
-# from utils.get_kitti_dataset import get_dataloaders
+from utils.get_vkitti_dataset_full import get_dataloaders
 from utils.tensorize_batch import tensorize_batch
 from eval_coco import evaluate
 from torch.utils.tensorboard import SummaryWriter
@@ -49,12 +49,13 @@ def __update_model(trainer_engine, batch):
     k_nn_indices = tensorize_batch(k_nn_indices, device, dtype=torch.long)
     sparse_depth_gt = tensorize_batch(
         sparse_depth_gt, device, dtype=torch.float)
-    
+
     # print(imgs.shape, sparse_depth.shape, masks.shape, lidar_fov.shape, k_nn_indices.shape)
-    loss_dict, _ = model(imgs, sparse_depth, masks, lidar_fov, k_nn_indices, anns=annotations, sparse_depth_gt=sparse_depth_gt)
+    loss_dict, _ = model(imgs, sparse_depth, masks, lidar_fov,
+                         k_nn_indices, anns=annotations, sparse_depth_gt=sparse_depth_gt)
 
     losses = sum(loss for loss in loss_dict.values())
-    
+
     i = trainer_engine.state.iteration
     writer.add_scalar("Loss/train/iteration", losses, i)
 
@@ -98,7 +99,7 @@ def __log_validation_results(trainer_engine):
     state_epoch = trainer_engine.state.epoch
     max_epochs = trainer_engine.state.max_epochs
     weights_path = "{}{}_loss_{}.pth".format(
-        constants.MODELS_LOC, config_kitti.MODEL_WEIGHTS_FILENAME_PREFIX, batch_loss)
+        constants.MODELS_LOC, config_kitti.MODEL, batch_loss)
     state_dict = model.state_dict()
     torch.save(state_dict, weights_path)
 
@@ -109,13 +110,14 @@ def __log_validation_results(trainer_engine):
     sys.stdout = open(train_res_file, 'a+')
     print(text)
 
-    # evaluate(model=None, weights_file=weights_path,
-    #          data_loader_val=None)
+    miou = evaluate(model=model, weights_file=weights_path,
+             data_loader_val=data_loader_val)
 
     writer.add_scalar("Loss/train/epoch", batch_loss, state_epoch)
+    writer.add_scalar("IoU/train/epoch", miou, state_epoch)
 
     scheduler.step()
-    
+
     with torch.no_grad():
 
         model.eval()
@@ -123,8 +125,8 @@ def __log_validation_results(trainer_engine):
         # for imgs, lidar_fov, masks, sparse_depth, k_nn_indices, sparse_depth_gt, _ in data_loader_train:
         for imgs, anns, lidar_fov, masks, sparse_depth, k_nn_indices, sparse_depth_gt, _ in data_loader_train:
 
-        # imgs, lidar_fov, masks, sparse_depth, k_nn_indices, sparse_depth_gt = next(
-        #     iter(data_loader_train))
+            # imgs, lidar_fov, masks, sparse_depth, k_nn_indices, sparse_depth_gt = next(
+            #     iter(data_loader_train))
 
             imgs = list(img for img in imgs)
             lidar_fov = list(lid_fov for lid_fov in lidar_fov)
@@ -133,38 +135,38 @@ def __log_validation_results(trainer_engine):
             k_nn_indices = list(k_nn for k_nn in k_nn_indices)
             sparse_depth_gt = list(sp_d for sp_d in sparse_depth_gt)
             annotations = [{k: v.to(device) for k, v in t.items()}
-                   for t in anns]
+                           for t in anns]
 
             imgs = tensorize_batch(imgs, device)
             lidar_fov = tensorize_batch(lidar_fov, device, dtype=torch.float)
             masks = tensorize_batch(masks, device, dtype=torch.bool)
             sparse_depth = tensorize_batch(sparse_depth, device)
-            k_nn_indices = tensorize_batch(k_nn_indices, device, dtype=torch.long)
+            k_nn_indices = tensorize_batch(
+                k_nn_indices, device, dtype=torch.long)
             sparse_depth_gt = tensorize_batch(
                 sparse_depth_gt, device, dtype=torch.float)
-
-
-
-            _, outputs = model(imgs, sparse_depth, masks, lidar_fov, k_nn_indices, anns=annotations, sparse_depth_gt=sparse_depth_gt)
-            
-            
+            _, outputs = model(imgs, sparse_depth, masks, lidar_fov, k_nn_indices,
+                               anns=annotations, sparse_depth_gt=sparse_depth_gt)
 
             for idx in range(len(outputs)):
-                
+
                 out = outputs[idx]["depth"].unsqueeze_(0)
-                out = out.repeat(3,1,1)*255
+                out = out.repeat(3, 1, 1)*255
                 out = out.cpu().numpy()
                 # plt.imshow(out)
-                
+
                 # plt.show()
 
                 img = imgs[idx]
                 sparse_depth_gt_sample = sparse_depth_gt[idx]*255
                 sparse_depth_gt_sample = sparse_depth_gt_sample.cpu().numpy()
-                
-                writer.add_image("eval/src_img", img, state_epoch, dataformats="CHW")
-                writer.add_image("eval/gt", sparse_depth_gt_sample, state_epoch, dataformats="CHW")
-                writer.add_image("eval/out", out, state_epoch, dataformats="CHW")
+
+                writer.add_image("eval/src_img", img,
+                                 state_epoch, dataformats="CHW")
+                writer.add_image("eval/gt", sparse_depth_gt_sample,
+                                 state_epoch, dataformats="CHW")
+                writer.add_image("eval/out", out, state_epoch,
+                                 dataformats="CHW")
 
                 label = anns[idx]["semantic_mask"].cpu().numpy()
                 pred = outputs[idx]["semantic_logits"]
@@ -172,10 +174,13 @@ def __log_validation_results(trainer_engine):
                 pred = torch.argmax(pred, dim=0).squeeze(1)
                 pred = pred.cpu().numpy()
 
-                print("shape:", anns[idx]["semantic_mask"].shape, outputs[idx]["semantic_logits"].shape)
-                writer.add_image("eval/semantic_gt", label, state_epoch, dataformats="HW")
-                writer.add_image("eval/semantic_pred", pred, state_epoch, dataformats="HW")
-            
+                # print("shape:", anns[idx]["semantic_mask"].shape,
+                #       outputs[idx]["semantic_logits"].shape)
+                writer.add_image("eval/semantic_gt", label,
+                                 state_epoch, dataformats="HW")
+                writer.add_image("eval/semantic_pred", pred,
+                                 state_epoch, dataformats="HW")
+
             break
 
 
@@ -222,49 +227,35 @@ if __name__ == "__main__":
 
     # else:
 
-    #     imgs_root_val = os.path.join(os.path.dirname(os.path.abspath(
-    #         __file__)), config_kitti.DATA, "imgs/2011_09_26/val/")
-    #     data_depth_velodyne_root_val = os.path.join(os.path.dirname(os.path.abspath(
-    #         __file__)), config_kitti.DATA, "data_depth_velodyne/val/")
-    #     data_depth_annotated_root_val = os.path.join(os.path.dirname(os.path.abspath(
-    #         __file__)), config_kitti.DATA, "data_depth_annotated/val/")
+    #     imgs_root = os.path.join(os.path.dirname(os.path.abspath(
+    #         __file__)), "data_vkitti/virtual_world_vkitti-2/vkitti_2.0.3_rgb/")
 
-    #     imgs_root_train = os.path.join(os.path.dirname(os.path.abspath(
-    #         __file__)), config_kitti.DATA, "imgs/2011_09_26/train/")
-    #     data_depth_velodyne_root_train = os.path.join(os.path.dirname(os.path.abspath(
-    #         __file__)), config_kitti.DATA, "data_depth_velodyne/train/")
-    #     data_depth_annotated_root_train = os.path.join(os.path.dirname(os.path.abspath(
-    #         __file__)), config_kitti.DATA, "data_depth_annotated/train/")
+    #     depth_root = os.path.join(os.path.dirname(os.path.abspath(
+    #         __file__)), "data_vkitti/virtual_world_vkitti-2/vkitti_2.0.3_depth/")
 
-    #     calib_velo2cam = calib_filename = os.path.join(os.path.dirname(os.path.abspath(
-    #         __file__)), config_kitti.DATA, "imgs/2011_09_26/calib_velo_to_cam.txt")
-    #     calib_cam2cam = calib_filename = os.path.join(os.path.dirname(os.path.abspath(
-    #         __file__)), config_kitti.DATA, "imgs/2011_09_26/calib_cam_to_cam.txt")
+    #     annotation = os.path.join(os.path.dirname(os.path.abspath(
+    #         __file__)), "kitti2coco_ann_crop.json")
 
-    #     # data loaders
-    #     data_loader_train = get_dataloaders(batch_size=config_kitti.BATCH_SIZE,
-    #                                         imgs_root=imgs_root_train,
-    #                                         data_depth_velodyne_root=data_depth_velodyne_root_train,
-    #                                         data_depth_annotated_root=data_depth_annotated_root_train,
-    #                                         calib_velo2cam=calib_velo2cam,
-    #                                         calib_cam2cam=calib_cam2cam, n_samples=config_kitti.MAX_TRAINING_SAMPLES)
-
-    #     data_loader_val = get_dataloaders(batch_size=config_kitti.BATCH_SIZE,
-    #                                       imgs_root=imgs_root_val,
-    #                                       data_depth_velodyne_root=data_depth_velodyne_root_val,
-    #                                       data_depth_annotated_root=data_depth_annotated_root_val,
-    #                                       calib_velo2cam=calib_velo2cam,
-    #                                       calib_cam2cam=calib_cam2cam)
+    #     data_loader_train, data_loader_val = get_dataloaders(
+    #         config_kitti.BATCH_SIZE,
+    #         imgs_root,
+    #         depth_root,
+    #         annotation,
+    #         split=True,
+    #         val_size=0.20,
+    #         n_samples=config_kitti.MAX_TRAINING_SAMPLES)
 
     #     # save data loaders
     #     data_loader_train_filename = os.path.join(os.path.dirname(
-    #         os.path.abspath(__file__)), constants.DATA_LOADERS_LOC, constants.KITTI_DATA_LOADER_TRAIN_FILANME)
+    #         os.path.abspath(__file__)), constants.DATA_LOADERS_LOC, constants.VKITTI_DATA_LOADER_TRAIN_FILANME)
 
     #     data_loader_val_filename = os.path.join(os.path.dirname(
-    #         os.path.abspath(__file__)), constants.DATA_LOADERS_LOC, constants.KITTI_DATA_LOADER_VAL_FILENAME)
+    #         os.path.abspath(__file__)), constants.DATA_LOADERS_LOC, constants.VKITTI_DATA_LOADER_VAL_FILENAME)
 
     #     torch.save(data_loader_train, data_loader_train_filename)
     #     torch.save(data_loader_val, data_loader_val_filename)
+
+    # ---------------TRAIN--------------------------------------
     scheduler = MultiStepLR(optimizer, milestones=[65, 80, 85, 90], gamma=0.1)
     ignite_engine = Engine(__update_model)
 

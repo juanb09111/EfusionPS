@@ -42,7 +42,7 @@ def data_loader_2_coco_ann(data_loader_val_filename, coco_ann_json):
 
 
 data_loader_val_filename = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "../", constants.DATA_LOADERS_LOC, "kitti_data_loader_val_full.pth")
+        os.path.abspath(__file__)), "../", constants.DATA_LOADERS_LOC, "vkitti_data_loader_val_100_obj.pth")
 
 coco_ann_json = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), "../", config_kitti.COCO_ANN)

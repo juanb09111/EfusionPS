@@ -15,13 +15,13 @@ EVAL_RES_FILENAME = "eval_results.txt"
 KITTI_TRAIN_RES_FILENAME = "kitti_training_results.txt"
 KITTI_TRAIN_RES_FILENAME_NO_INSTANCE = "vkitti_training_efusionps_no_instance_results.txt"
 VKITTI_TRAIN_RES_FILENAME_EffPS_NO_INSTANCE = "vkitti_training_effps_no_instance_results.txt"
-VKITTI_TRAIN_RES_FILENAME_EffPS = "vkitti_training_effps_results.txt"
+VKITTI_TRAIN_RES_FILENAME_EffPS = "vkitti_training_effps_results_parallel.txt"
 
 KITTI_DATA_LOADER_TRAIN_FILANME = "kitti_data_loader_train.pth"
 KITTI_DATA_LOADER_VAL_FILENAME = "kitti_data_loader_val.pth"
 
-VKITTI_DATA_LOADER_TRAIN_FILANME = "vkitti_data_loader_train_100_obj.pth"
-VKITTI_DATA_LOADER_VAL_FILENAME = "vkitti_data_loader_val_100_obj.pth"
+VKITTI_DATA_LOADER_TRAIN_FILANME = "vkitti_data_loader_train_all_samples_obj.pth"
+VKITTI_DATA_LOADER_VAL_FILENAME = "vkitti_data_loader_val_all_samples_obj.pth"
 
 DATA_LOADER_TRAIN_FILANME = "data_loader_train.pth"
 DATA_LOADER_VAL_FILENAME = "data_loader_val.pth"

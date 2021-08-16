@@ -52,7 +52,7 @@ def predict(model,
 
     with torch.no_grad():
         
-        for imgs, lidar_fov, masks, sparse_depth, k_nn_indices, sparse_depth_gt in data_loader_val:
+        for imgs, anns, lidar_fov, masks, sparse_depth, k_nn_indices, sparse_depth_gt, _  in data_loader_val:
 
             imgs = list(img for img in imgs)
             lidar_fov = list(lid_fov for lid_fov in lidar_fov)
@@ -60,6 +60,8 @@ def predict(model,
             sparse_depth = list(sd for sd in sparse_depth)
             k_nn_indices = list(k_nn for k_nn in k_nn_indices)
             sparse_depth_gt = list(sp_d for sp_d in sparse_depth_gt)
+            annotations = [{k: v.to(device) for k, v in t.items()}
+                       for t in anns]
 
             imgs = tensorize_batch(imgs, device)
             lidar_fov = tensorize_batch(lidar_fov, device, dtype=torch.float)
@@ -70,14 +72,29 @@ def predict(model,
             sparse_depth_gt = tensorize_batch(
                 sparse_depth_gt, device, dtype=torch.float)
 
-            _, outputs = model(imgs, sparse_depth, masks,
-                               lidar_fov, k_nn_indices, sparse_depth_gt)
+            outputs = model(imgs,  sparse_depth,
+                            masks,
+                            lidar_fov,
+                            k_nn_indices,
+                            anns=annotations)
+            
+            for idx in range(len(outputs)):
 
-            for idx in range(outputs.shape[0]):
+                out_depth = outputs[idx]["depth"]
 
-                rmse = RMSE(sparse_depth_gt, outputs[idx])
-                
-                out = outputs[idx].cpu().numpy()
+                ## --------------------------------------
+                # rmse = RMSE(sparse_depth_gt, out_depth)
+
+                mask_gt = torch.where(sparse_depth_gt > 0, torch.tensor((1), device=temp_variables.DEVICE, dtype=torch.float64), torch.tensor((0), device=temp_variables.DEVICE, dtype=torch.float64))
+                mask_gt = mask_gt.squeeze_(1)
+                sparse_depth_gt = sparse_depth_gt.squeeze_(1) # remove C dimension there's only one
+                c = torch.tensor((1000), device=device)
+                sparse_depth_gt = sparse_depth_gt*c
+                pred = out_depth*c
+                criterion = nn.MSELoss()
+                rmse = torch.sqrt(criterion(sparse_depth_gt, pred*mask_gt))
+                ##-----------------------------------------
+                out = outputs[idx]["depth"].cpu().numpy()
                 img = imgs[idx]
 
                 f, (ax1, ax2) = plt.subplots(2, 1)
@@ -102,6 +119,37 @@ def predict(model,
 
                 f.savefig('{}/rmse_{}.png'.format(folder, rmse))
                 plt.close(f)
+
+
+            # for idx in range(outputs.shape[0]):
+
+            #     rmse = RMSE(sparse_depth_gt, outputs[idx])
+                
+            #     out = outputs[idx].cpu().numpy()
+            #     img = imgs[idx]
+
+            #     f, (ax1, ax2) = plt.subplots(2, 1)
+
+            #     plt.subplots_adjust(top=1, bottom=0, right=1, left=0,
+            #                         hspace=0, wspace=0)
+            #     plt.margins(0, 0)
+            #     plt.gca().xaxis.set_major_locator(plt.NullLocator())
+            #     plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+            #     ax1.imshow(img.permute(1, 2, 0).cpu().numpy())
+            #     # print('img')
+            #     # plt.show()
+            #     ax1.axis('off')
+
+            #     ax2.imshow(out)
+            #     # print('out')
+            #     # plt.show()
+            #     ax2.axis('off')
+
+            #     # print(out.max(), out.min())
+
+            #     f.savefig('{}/rmse_{}.png'.format(folder, rmse))
+            #     plt.close(f)
                 
 
 

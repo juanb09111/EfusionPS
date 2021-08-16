@@ -3,8 +3,9 @@ BATCH_SIZE = 1
 # MODEL = "FuseNet"
 # MODEL = "EfficientPS"
 # MODEL = "EfusionPS"
-MODEL =  "EfusionPS_V3"
-MODEL_WEIGHTS_FILENAME_PREFIX = "EfusionPS_V3"
+# MODEL =  "EfusionPS_V3"
+MODEL =  "EfusionPS_V3_depth" 
+MODEL_WEIGHTS_FILENAME_PREFIX = "EfusionPS_V3_depth"
 
 BACKBONE = "resnet50" # This is the only one available at the moment
 BACKBONE_OUT_CHANNELS = 256
@@ -35,12 +36,13 @@ DATA = "data_kitti/kitti_depth_completion_unmodified/"
 
 MAX_EPOCHS = 100
 
-MAX_TRAINING_SAMPLES = 100
+# MAX_TRAINING_SAMPLES = 100
+MAX_TRAINING_SAMPLES = 500
 
 # If USE_PREEXISTING_DATA_LOADERS is True new data_loaders will not be written
 USE_PREEXISTING_DATA_LOADERS = True
-DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/vkitti_data_loader_train_100_obj.pth"
-DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/vkitti_data_loader_val_100_obj.pth"
+DATA_LOADER_TRAIN_FILANME = "tmp/data_loaders/vkitti_data_loader_train_500_obj.pth"
+DATA_LOADER_VAL_FILENAME = "tmp/data_loaders/vkitti_data_loader_val_500_obj.pth"
 
 
 COCO_ANN = "kitti2coco_ann_crop_obj.json"
@@ -59,8 +61,8 @@ PANOPTIC =  True
 # Set the model weights to be used for evaluation
 # MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.11186084686504852.pth"
 # MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_0.30936820443942586.pth"
-# MODEL_WEIGHTS_FILENAME = "tmp/models/FuseNet_weights_loss_3.8328559144969425.pth"
-MODEL_WEIGHTS_FILENAME = "tmp/models/EfficientPS_loss_0.6298974752426147.pth"
+MODEL_WEIGHTS_FILENAME = "tmp/models/EfusionPS_V3_depth_loss_0.6401694336146243.pth"
+# MODEL_WEIGHTS_FILENAME = "tmp/models/EfusionPS_V3_Blocks=12_depth_branch/EfusionPS_V3_depth_loss_0.44096572112988053.pth"
 # Set the data loader to be used for evaluation. This can be set to None to use default filename
 DATA_LOADER = None
 

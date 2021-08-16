@@ -172,6 +172,20 @@ class EfusionPS(nn.Module):
             nn.ReLU()
         )
 
+        #----------------------
+        self.feat_conv = nn.Sequential(
+            nn.Conv2d(in_channels=1, out_channels=16,
+                      kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=16, out_channels=16,
+                      kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(16),
+            nn.ReLU()
+        )
+
+        #------------------------------
+
         self.rgbd_conv = nn.Sequential(
             nn.Conv2d(in_channels=4, out_channels=32,
                       kernel_size=3, stride=2, padding=1),
@@ -191,10 +205,10 @@ class EfusionPS(nn.Module):
             FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
             FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
             FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
-            # FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
-            # FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
-            # FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
-            # FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
+            FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
+            FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
+            FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
+            FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True),
             FuseBlock(64, 64, k_number, n_number=n_number, extra_output_layer=True)
         )
 
@@ -229,44 +243,60 @@ class EfusionPS(nn.Module):
                 instance=True,
                 sparse_depth_gt=None):
 
-        # Depth-------------------
-        _, H, W = mask.shape
-        y_sparse = self.sparse_conv(sparse_depth)  # B x 16 x H/2 x W/2
-        # rgbd branch
-        x_concat_d = torch.cat((images, sparse_depth), dim=1)
-        y_rgbd = self.rgbd_conv(x_concat_d)  # B x 32 x H/2 x W/2
-
-        y_rgbd_concat_y_sparse = torch.cat((y_rgbd, y_sparse), dim=1)
-
-        y_rgbd_concat_y_sparse = F.interpolate(y_rgbd_concat_y_sparse, (H, W))
-
         
-
-        fused, _, _, _ = self.fuse_conv(
-            (y_rgbd_concat_y_sparse, mask, coors, k_nn_indices))
-
-        fused_out = self.output_layer(fused)
-
-
-        #--------------------------------
         losses = {}
         semantic_logits = []
 
         # images = list(image for image in y_rgbd_concat_y_sparse) # Jul14_11-35-04
 
-        images = list(image for image in images)
+        imgs = list(image for image in images)
 
         if self.training:
-            maskrcnn_losses, backbone_feat = self.mask_rcnn(images, anns)
+            maskrcnn_losses, backbone_feat = self.mask_rcnn(imgs, anns)
 
         else:
-            maskrcnn_results, backbone_feat = self.mask_rcnn(images)
+            maskrcnn_results, backbone_feat = self.mask_rcnn(imgs)
 
         P4, P8, P16, P32 = backbone_feat['0'], backbone_feat['1'], backbone_feat['2'], backbone_feat['3']
 
         if semantic:
             # semantic_logits = self.semantic_head(P4, P8, P16, P32, fused_out)
             semantic_logits = self.semantic_head(P4, P8, P16, P32)
+
+
+        # Depth-------------------
+        _, H, W = mask.shape
+
+        # depth head
+
+        # feat = self.depth_head(P4, P8, P16, P32)
+
+        # feat conv
+
+        # y_feat = self.feat_conv(feat)
+
+        
+        y_sparse = self.sparse_conv(sparse_depth)  # B x 16 x H/2 x W/2
+
+        
+        # rgbd branch
+        x_concat_d_concat = torch.cat((images, sparse_depth), dim=1) #C=4
+
+        y_rgbd = self.rgbd_conv(x_concat_d_concat)  # B x 32 x H/2 x W/2
+
+        y_rgbdf_concat_y_sparse_concat = torch.cat((y_rgbd, y_sparse), dim=1)
+
+        y_rgbdf_concat_y_sparse_concat = F.interpolate(y_rgbdf_concat_y_sparse_concat, (H, W))
+
+        
+
+        fused, _, _, _ = self.fuse_conv(
+            (y_rgbdf_concat_y_sparse_concat, mask, coors, k_nn_indices))
+
+        fused_out = self.output_layer(fused)
+
+
+        #--------------------------------
 
         out = fused_out.squeeze_(1)
 # 

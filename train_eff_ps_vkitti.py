@@ -12,6 +12,7 @@ from utils.get_vkitti_dataset_full import get_dataloaders
 from utils.tensorize_batch import tensorize_batch
 
 from utils import panoptic_fusion
+from utils.data_loader_2_coco_ann import data_loader_2_coco_ann
 from eval_coco import evaluate
 
 from torch.utils.tensorboard import SummaryWriter
@@ -242,13 +243,18 @@ if __name__ == "__main__":
         data_loader_train = torch.load(config_kitti.DATA_LOADER_TRAIN_FILANME)
         data_loader_val = torch.load(config_kitti.DATA_LOADER_VAL_FILENAME)
 
+        # Dataloader to coco ann for evaluation purposes
+        annotation = os.path.join(os.path.dirname(os.path.abspath(
+            __file__)), config_kitti.COCO_ANN)
+        data_loader_2_coco_ann(config_kitti.DATA_LOADER_VAL_FILENAME, annotation)
+
     else:
 
         imgs_root = os.path.join(os.path.dirname(os.path.abspath(
-            __file__)), "data_vkitti/virtual_world_vkitti-2/vkitti_2.0.3_rgb/")
+            __file__)), "data_vkitti/vkitti_2.0.3_rgb/")
 
         depth_root = os.path.join(os.path.dirname(os.path.abspath(
-            __file__)), "data_vkitti/virtual_world_vkitti-2/vkitti_2.0.3_depth/")
+            __file__)), "data_vkitti/vkitti_2.0.3_depth/")
 
         annotation = os.path.join(os.path.dirname(os.path.abspath(
             __file__)), config_kitti.COCO_ANN)
@@ -271,6 +277,9 @@ if __name__ == "__main__":
 
         torch.save(data_loader_train, data_loader_train_filename)
         torch.save(data_loader_val, data_loader_val_filename)
+
+        # Dataloader to coco ann for evaluation purposes
+        data_loader_2_coco_ann(data_loader_val_filename, annotation)
 
     # ---------------TRAIN--------------------------------------
     scheduler = MultiStepLR(optimizer, milestones=[65, 80, 85, 90], gamma=0.1)
